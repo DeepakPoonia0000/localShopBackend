@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const Shop = require('../model/OwnerSchema')
 
 const jwtSecret = 'Thr0bZyphrnQ8vkJumpl3BaskEel@ticsXzylN!gmaPneuma';
+const jwtSecretCust = 'Tkjnsadf&@#$^smegn*^$javijnJHBIBUNoion6546ib$';
 
 const verifyToken = async (req, res, next) => {
     const token = req.headers.authorization;
@@ -16,7 +17,39 @@ const verifyToken = async (req, res, next) => {
         const decodedToken = jwt.verify(token, jwtSecret);
         const shop = await Shop.findById(decodedToken.id);
 
-        if (!shop || shop.token !== token) {
+        if (!shop) {
+            return res.status(401).json({ message: 'Invalid shop' });
+        }
+
+        if (shop.token !== token) {
+            return res.status(401).json({ message: 'Invalid token' });
+        }
+
+        req.shopId = decodedToken.id;
+        next();
+    } catch (error) {
+        console.error('Failed to verify token:', error);
+        return res.status(500).json({ message: 'Failed to verify token', error: error.message });
+    }
+};
+
+const verifyTokenCust = async (req, res, next) => {
+    const token = req.headers.authorization;
+
+
+    if (!token) {
+        return res.status(403).json({ message: 'No token provided' });
+    }
+
+    try {
+        const decodedToken = jwt.verify(token, jwtSecretCust);
+        const customer = await Shop.findById(decodedToken.id);
+
+        if (!customer) {
+            return res.status(401).json({ message: 'Invalid Customer' });
+        }
+
+        if (customer.token !== token) {
             return res.status(401).json({ message: 'Invalid token' });
         }
 
@@ -31,13 +64,15 @@ const verifyToken = async (req, res, next) => {
 
 const addShop = async (req, res) => {
     try {
-        const { email, shopName, password } = req.body;
-        if (!shopName || !password || !email) {
-            return res.status(400).json({ error: 'Name and password are required' });
+        const { email, shopName, password, role } = req.body;
+        if (!shopName || !password || !email || !role) {
+            return res.status(400).json({ error: 'All fields are necessary!!' });
         }
 
+
+
         const hashedPassword = await bcrypt.hash(password, 10);
-        const newShop = await Shop.create({ email, shopName, password: hashedPassword });
+        const newShop = await Shop.create({ email, shopName, password: hashedPassword, role });
         console.log(newShop)
         res.status(201).json({ newShop });
     } catch (error) {
@@ -58,10 +93,27 @@ const loginShop = async (req, res) => {
         const isPasswordValid = await bcrypt.compare(password, shop.password);
 
         if (isPasswordValid) {
-            const token = jwt.sign({ id: shop._id }, jwtSecret, { expiresIn: '100d' });
-            shop.token = token;
-            await shop.save();
-            return res.status(200).json({ message: 'Login successful', token });
+
+            if (shop.role == 'Owner') {
+
+                const token = jwt.sign({ id: shop._id }, jwtSecret, { expiresIn: '100d' });
+                shop.token = token;
+                await shop.save();
+                const role = shop.role;
+                console.log(shop)
+                return res.status(200).json({ message: 'Login successful', token, role });
+
+            } else if (shop.role == 'Customer') {
+
+                const token = jwt.sign({ id: shop._id }, jwtSecretCust, { expiresIn: '100d' });
+                shop.token = token;
+                await shop.save();
+                const role = shop.role;
+                console.log(shop)
+                return res.status(200).json({ message: 'Login successful', token, role });
+
+            }
+
         } else {
             return res.status(401).json({ error: 'Invalid password' });
         }
@@ -72,4 +124,4 @@ const loginShop = async (req, res) => {
 };
 
 
-module.exports = { addShop, loginShop, verifyToken };
+module.exports = { addShop, loginShop, verifyToken, verifyTokenCust };

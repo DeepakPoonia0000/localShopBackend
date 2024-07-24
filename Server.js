@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors')
-const { addShop, loginShop, verifyToken } = require('./controller/ShopUserController');
+const { addShop, loginShop, verifyToken , verifyTokenCust } = require('./controller/ShopUserController');
 const { addProduct , updateProductByObjectId , deleteProductByObjectId , getProductByObjectId , getProductsByProductId } = require('./controller/productController')
 const dbConnection = require('./dbConnection')
 
@@ -18,7 +18,11 @@ app.post('/addShop', addShop);
 app.post('/loginShop', loginShop);
 app.post('/addProduct', verifyToken, addProduct);
 app.get('/products', verifyToken, getProductsByProductId);
-app.get('/details', verifyToken, getProductByObjectId);
+
+
+app.get('/details', verifyTokenCust, getProductByObjectId);
+
+
 app.delete('/delete', verifyToken, deleteProductByObjectId);
 app.put('/update', verifyToken, updateProductByObjectId);
 

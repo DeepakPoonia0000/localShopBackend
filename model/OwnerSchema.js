@@ -5,6 +5,7 @@ const addShopSchema = new mongoose.Schema({
     shopName: String,
     password: String,
     token: String,
+    role:String,
 });
 
 const Shop = mongoose.model('Shop', addShopSchema);
