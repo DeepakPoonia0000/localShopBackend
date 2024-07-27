@@ -1,16 +1,19 @@
+// ProductController.js
+
 const Product = require('../model/ProductSchema');
 
 const addProduct = async (req, res) => {
     try {
         const { productImage, productName, description, colors, size, price } = req.body;
         const shopId = req.shopId;
+        const shopName = req.shopName;
 
         if (!productImage || !productName || !description || !colors || !size || !price) {
             return res.status(400).json({ error: 'All product details are required' });
         }
 
         const newProduct = await Product.create({
-            productId: shopId, productImage, productName, description, colors, size, price
+            shopId: shopId, shopName, productImage, productName, description, colors, size, price
         });
         console.log(newProduct);
         res.status(201).json({ message: 'Product added successfully', product: newProduct });
@@ -23,8 +26,7 @@ const addProduct = async (req, res) => {
 const getProductsByProductId = async (req, res) => {
     try {
         const shopId = req.shopId;
-        const products = await Product.find({ productId: shopId });
-
+        const products = await Product.find({ shopId });
         console.log(products)
         res.status(200).json(products);
     } catch (error) {
@@ -33,10 +35,10 @@ const getProductsByProductId = async (req, res) => {
     }
 };
 
-const getProductByObjectId = async (req, res) => {
+const getProductByShopId = async (req, res) => {
     try {
-        const product = await Product.find();
-
+        const { shopId } = req.body;
+        const product = await Product.find({ shopId });
         if (!product) {
             return res.status(404).json({ error: 'Product not found' });
         }
@@ -50,14 +52,20 @@ const getProductByObjectId = async (req, res) => {
 
 const deleteProductByObjectId = async (req, res) => {
     try {
-        const { objectId } = req.body;
+        const { productId } = req.body;
+        const shopId = req.shopId;
 
-        const deletedProduct = await Product.findByIdAndDelete({_id:objectId});
+        const product = await Product.findById(productId);
 
-        if (!deletedProduct) {
+        if (!product) {
             return res.status(404).json({ error: 'Product not found' });
         }
 
+        if (product.shopId !== shopId) {
+            return res.status(403).json({ error: 'You do not have permission to delete this product' });
+        }
+
+        await Product.findByIdAndDelete(productId);
         res.status(200).json({ message: 'Product deleted successfully' });
     } catch (error) {
         console.error('Failed to delete product:', error);
@@ -67,16 +75,24 @@ const deleteProductByObjectId = async (req, res) => {
 
 const updateProductByObjectId = async (req, res) => {
     try {
-        const { objectId, productImage, productName, description, colors, size, price } = req.body;
+        const { productId, productImage, productName, description, colors, size, price } = req.body;
+        const shopId = req.shopId;
 
-        const updatedProduct = await Product.findByIdAndUpdate(
-            {_id:objectId},
-            { productImage, productName, description, colors, size, price }
-        );
+        const product = await Product.findById(productId);
 
-        if (!updatedProduct) {
+        if (!product) {
             return res.status(404).json({ error: 'Product not found' });
         }
+
+        if (product.shopId !== shopId) {
+            return res.status(403).json({ error: 'You do not have permission to update this product' });
+        }
+
+        const updatedProduct = await Product.findByIdAndUpdate(
+            productId,
+            { productImage, productName, description, colors, size, price },
+            { new: true } // This option returns the updated document
+        );
 
         res.status(200).json({ message: 'Product updated successfully', product: updatedProduct });
     } catch (error) {
@@ -85,4 +101,5 @@ const updateProductByObjectId = async (req, res) => {
     }
 };
 
-module.exports = { addProduct, getProductsByProductId, getProductByObjectId, deleteProductByObjectId, updateProductByObjectId };
+
+module.exports = { addProduct, getProductsByProductId, getProductByShopId, deleteProductByObjectId, updateProductByObjectId };
