@@ -1,31 +1,38 @@
 // ProductController.js
 
 const Product = require('../model/ProductSchema');
+const User = require('../model/UserSchema')
 
 const addProduct = async (req, res) => {
     try {
         const { productImage, productName, description, colors, size, price } = req.body;
-        const shopId = req.shopId;
+        const shopId = req.Id;
         const shopName = req.shopName;
+        const user = User.findOne(shopName)
+        const role = user.role;
 
+        if(role ==='R@7yU5vK*9#L^eP&1!sF8$2B0oQmWzD4xJ%pC3gN#6T$Y'){
         if (!productImage || !productName || !description || !colors || !size || !price) {
             return res.status(400).json({ error: 'All product details are required' });
         }
 
         const newProduct = await Product.create({
-            shopId: shopId, shopName, productImage, productName, description, colors, size, price
+            shopId, shopName, productImage, productName, description, colors, size, price
         });
         console.log(newProduct);
         res.status(201).json({ message: 'Product added successfully', product: newProduct });
+    }else {
+        res.status(500).json('You are not authorized to add any product')
+    }
     } catch (error) {
         console.error('Failed to add product:', error);
         res.status(500).json({ error: error.message });
     }
 };
 
-const getProductsByProductId = async (req, res) => {
+const getProductsByShopId = async (req, res) => {
     try {
-        const shopId = req.shopId;
+        const shopId = req.Id;
         const products = await Product.find({ shopId });
         console.log(products)
         res.status(200).json(products);
@@ -35,25 +42,34 @@ const getProductsByProductId = async (req, res) => {
     }
 };
 
-const getProductByShopId = async (req, res) => {
+const getProductByShopName = async (req, res) => {
     try {
-        const { shopId } = req.body;
-        const product = await Product.find({ shopId });
-        if (!product) {
-            return res.status(404).json({ error: 'Product not found' });
+        const { shopName } = req.query; //shopName from query parameters
+
+        if (!shopName) {
+            return res.status(400).json({ error: 'shopName is required' });
         }
-        console.log(product)
-        res.status(200).json(product);
+
+        //products based on shopName
+        const products = await Product.find({ shopName });
+
+        if (products.length === 0) {
+            return res.status(404).json({ error: 'No products found for this shop' });
+        }
+
+        console.log(products);
+        res.status(200).json(products);
     } catch (error) {
-        console.log('Failed to get product:', error);
+        console.error('Failed to get products:', error);
         res.status(500).json({ error: error.message });
     }
 };
 
+
 const deleteProductByObjectId = async (req, res) => {
     try {
-        const { productId } = req.body;
-        const shopId = req.shopId;
+        const { productId } = req.body; 
+        const shopId = req.Id;
 
         const product = await Product.findById(productId);
 
@@ -76,8 +92,7 @@ const deleteProductByObjectId = async (req, res) => {
 const updateProductByObjectId = async (req, res) => {
     try {
         const { productId, productImage, productName, description, colors, size, price } = req.body;
-        const shopId = req.shopId;
-
+        const shopId = req.Id; 
         const product = await Product.findById(productId);
 
         if (!product) {
@@ -91,7 +106,7 @@ const updateProductByObjectId = async (req, res) => {
         const updatedProduct = await Product.findByIdAndUpdate(
             productId,
             { productImage, productName, description, colors, size, price },
-            { new: true } // This option returns the updated document
+            { new: true } // Return the updated document
         );
 
         res.status(200).json({ message: 'Product updated successfully', product: updatedProduct });
@@ -101,5 +116,4 @@ const updateProductByObjectId = async (req, res) => {
     }
 };
 
-
-module.exports = { addProduct, getProductsByProductId, getProductByShopId, deleteProductByObjectId, updateProductByObjectId };
+module.exports = { addProduct, getProductsByShopId, getProductByShopName, deleteProductByObjectId, updateProductByObjectId };
