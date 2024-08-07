@@ -96,7 +96,7 @@ const addUser = async (req, res) => {
 
         } else {
             return res.status(400).json({ error: 'Invalid role specified' });
-            
+
         }
 
     } catch (error) {
@@ -120,12 +120,12 @@ const loginUser = async (req, res) => {
         const isPasswordValid = await bcrypt.compare(password, user.password);
 
         if (isPasswordValid) {
-            const token = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: '100d' });
+            const token = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: '60d' });
             user.token = token;
             await user.save();
             role = user.role;
             console.log("User logged in:", user);
-            return res.status(200).json({ message: 'Login successful', token , role});
+            return res.status(200).json({ message: 'Login successful', token, role });
 
         } else {
             return res.status(401).json({ error: 'Invalid password' });
@@ -183,38 +183,38 @@ const getShops = async (req, res) => {
         const role = req.role;
         const { pincode, page = 1, limit = 10 } = req.query;
 
-        console.log('Role from request:', role);  
+        console.log('Role from request:', role);
 
         let shops;
 
         const pincodeInt = parseInt(pincode, 10);
-            const minPincode = pincodeInt - 10;
-            const maxPincode = pincodeInt + 10;
+        const minPincode = pincodeInt - 10;
+        const maxPincode = pincodeInt + 10;
         if (pincode) {
             // const pincodeInt = parseInt(pincode, 10);
             // const minPincode = pincodeInt - 10;
             // const maxPincode = pincodeInt + 10;
 
             shops = await User.find(
-                { 
+                {
                     role: "R@7yU5vK*9#L^eP&1!sF8$2B0oQmWzD4xJ%pC3gN#6T$Y",
                     pincode: { $gte: minPincode, $lte: maxPincode }
                 },
                 'shopName address pincode'
             )
-            .skip((page - 1) * limit)
-            .limit(limit);
+                .skip((page - 1) * limit)
+                .limit(limit);
         } else {
             shops = await User.find(
                 { role: "R@7yU5vK*9#L^eP&1!sF8$2B0oQmWzD4xJ%pC3gN#6T$Y" },
                 'shopName address pincode'
             )
-            .skip((page - 1) * limit)
-            .limit(limit);
+                .skip((page - 1) * limit)
+                .limit(limit);
         }
 
         const totalShops = await User.countDocuments(
-            { 
+            {
                 role: "R@7yU5vK*9#L^eP&1!sF8$2B0oQmWzD4xJ%pC3gN#6T$Y",
                 ...(pincode ? { pincode: { $gte: minPincode, $lte: maxPincode } } : {})
             }

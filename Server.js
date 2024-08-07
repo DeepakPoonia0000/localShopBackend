@@ -22,7 +22,8 @@ app.get('/products', verifyToken, getProductsByShopId);
 app.delete('/delete', verifyToken, deleteProductByObjectId);
 app.put('/update', verifyToken, updateProductByObjectId);
 
-app.get('/details', verifyToken, getProductByShopName);
+app.get('/details', getProductByShopName);
+// app.get('/details', verifyToken, getProductByShopName);
 app.get('/shops', verifyToken, getShops);
 
 app.listen(PORT, (error) => {

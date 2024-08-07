@@ -13,11 +13,11 @@ const addProduct = async (req, res) => {
         console.log("user details in add product are\n", "userID", shopId, "\n User ShopName", shopName, "\n ROle", role);
 
 
-        if (role === 'R@7yU5vK*9#L^eP&1!sF8$2B0oQmWzD4xJ%pC3gN#6T$Y') {  
+        if (role === 'R@7yU5vK*9#L^eP&1!sF8$2B0oQmWzD4xJ%pC3gN#6T$Y') {
             if (!productImage || !productName || !description || !colors || !size || !price) {
                 return res.status(400).json({ error: 'All product details are required' });
             }
-        
+
 
             const newProduct = await Product.create({
                 shopId, shopName, productImage, productName, description, colors, size, price
@@ -53,8 +53,8 @@ const getProductByShopName = async (req, res) => {
             return res.status(400).json({ error: 'shopName is required' });
         }
 
-        //products based on shopName
-        const products = await Product.find({ shopName });
+        //products based on shopName and dont send the shopId
+        const products = await Product.find({ shopName }).select('-shopId');
 
         if (products.length === 0) {
             return res.status(404).json({ error: 'No products found for this shop' });

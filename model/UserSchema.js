@@ -7,11 +7,15 @@ const addUser = new mongoose.Schema({
     name: String,
     shopName: String,
     password: String,
-    role:String,
+    role: String,
     pincode: Number,
     address: String,
     location: String,
     token: String,
+    dateOfRegister: {
+        type: Date,
+        default: Date.now,
+    }
 });
 
 const User = mongoose.model('User', addUser);
