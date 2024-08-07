@@ -1,7 +1,9 @@
 const express = require('express');
 const cors = require('cors');
-const { addUser, loginUser, getShops, verifyToken, addProduct, updateProductByObjectId, deleteProductByObjectId, getProductsByShopId, getProductByShopName } = require('./controller/UserController')
+const { addUser, loginUser, getShops, verifyToken } = require('./controller/UserController')
+const { addProduct, updateProductByObjectId, deleteProductByObjectId, getProductsByShopId, getProductByShopName } = require('./controller/productController');
 const dbConnection = require('./dbConnection');
+const { verify } = require('jsonwebtoken');
 
 const app = express();
 const PORT = 7000;

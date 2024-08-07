@@ -1,7 +1,6 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../model/UserSchema');
-const Product = require('../model/ProductSchema')
 
 const jwtSecret = 'Thr0bZyphrnQ8vkJumpl3BaskEel@ticsXzylN!gmaPneuma';
 const customer = 'jI$3Mv@8kP&lD6G#9oK!uS^zW0YdR*L1fT7W#bNp8qXvE$2';
@@ -30,7 +29,7 @@ const verifyToken = async (req, res, next) => {
         req.Id = decodedToken.id;
         req.shopName = user.shopName;
         req.role = user.role;
-        console.log("Token verified successfully user details are :", req.id, req.shopName, req.role);
+        // console.log("Token verified successfully user details are\n" ,"userID",req.Id ,"\n User ShopName",req.shopName  );
         next();
     } catch (error) {
         console.error('Failed to verify token:', error);
@@ -97,7 +96,7 @@ const addUser = async (req, res) => {
 
         } else {
             return res.status(400).json({ error: 'Invalid role specified' });
-
+            
         }
 
     } catch (error) {
@@ -126,7 +125,7 @@ const loginUser = async (req, res) => {
             await user.save();
             role = user.role;
             console.log("User logged in:", user);
-            return res.status(200).json({ message: 'Login successful', token, role });
+            return res.status(200).json({ message: 'Login successful', token , role});
 
         } else {
             return res.status(401).json({ error: 'Invalid password' });
@@ -137,22 +136,96 @@ const loginUser = async (req, res) => {
     }
 };
 
+
+
+// const getShops = async (req, res) => {
+//     try {
+//         const role = req.role;
+//         const { pincode } = req.query;
+
+//         let shops;
+//         if (pincode) {
+//             console.log(pincode);
+//             const pincodeInt = parseInt(pincode, 10);
+//             const minPincode = pincodeInt - 10;
+//             const maxPincode = pincodeInt + 10;
+
+//             shops = await User.find(
+//                 { 
+//                     role: "R@7yU5vK*9#L^eP&1!sF8$2B0oQmWzD4xJ%pC3gN#6T$Y",
+//                     pincode: { $gte: minPincode, $lte: maxPincode }
+//                 },
+//                 'shopName address pincode'
+//             );
+//         } else {
+//             shops = await User.find(
+//                 { role: "R@7yU5vK*9#L^eP&1!sF8$2B0oQmWzD4xJ%pC3gN#6T$Y" },
+//                 'shopName address pincode'
+//             );
+//         }
+
+//         if (shops.length === 0) {
+//             return res.status(404).json({ error: 'No shops found' });
+//         }
+
+//         res.status(200).json([shops, role]);
+//     } catch (error) {
+//         console.error('Failed to get shops:', error);
+//         res.status(500).json({ error: error.message });
+//     }
+// };
+
+
+
+
 const getShops = async (req, res) => {
     try {
         const role = req.role;
-        console.log('Role from request:', role); // Debugging statement
+        const { pincode, page = 1, limit = 10 } = req.query;
 
-        const shops = await User.find(
-            { role: "R@7yU5vK*9#L^eP&1!sF8$2B0oQmWzD4xJ%pC3gN#6T$Y" },
-            'shopName address pincode'
+        console.log('Role from request:', role);  
+
+        let shops;
+
+        const pincodeInt = parseInt(pincode, 10);
+            const minPincode = pincodeInt - 10;
+            const maxPincode = pincodeInt + 10;
+        if (pincode) {
+            // const pincodeInt = parseInt(pincode, 10);
+            // const minPincode = pincodeInt - 10;
+            // const maxPincode = pincodeInt + 10;
+
+            shops = await User.find(
+                { 
+                    role: "R@7yU5vK*9#L^eP&1!sF8$2B0oQmWzD4xJ%pC3gN#6T$Y",
+                    pincode: { $gte: minPincode, $lte: maxPincode }
+                },
+                'shopName address pincode'
+            )
+            .skip((page - 1) * limit)
+            .limit(limit);
+        } else {
+            shops = await User.find(
+                { role: "R@7yU5vK*9#L^eP&1!sF8$2B0oQmWzD4xJ%pC3gN#6T$Y" },
+                'shopName address pincode'
+            )
+            .skip((page - 1) * limit)
+            .limit(limit);
+        }
+
+        const totalShops = await User.countDocuments(
+            { 
+                role: "R@7yU5vK*9#L^eP&1!sF8$2B0oQmWzD4xJ%pC3gN#6T$Y",
+                ...(pincode ? { pincode: { $gte: minPincode, $lte: maxPincode } } : {})
+            }
         );
 
         if (shops.length === 0) {
             return res.status(404).json({ error: 'No shops found' });
         }
 
-        console.log('Shops found:', shops); // Debugging statement
-        res.status(200).json({ shops, role });
+        console.log('Shops found:', shops);
+        res.status(200).json({ shops, role, total: totalShops });
     } catch (error) {
         console.error('Failed to get shops:', error);
         res.status(500).json({ error: error.message });
@@ -160,117 +233,4 @@ const getShops = async (req, res) => {
 };
 
 
-const addProduct = async (req, res) => {
-    try {
-        const { productImage, productName, description, colors, size, price } = req.body;
-        const shopId = req.Id;
-        const shopName = req.shopName;
-        const user = User.findOne(shopName)
-        const role = user.role;
-
-        if (role === 'R@7yU5vK*9#L^eP&1!sF8$2B0oQmWzD4xJ%pC3gN#6T$Y') {
-            if (!productImage || !productName || !description || !colors || !size || !price) {
-                return res.status(400).json({ error: 'All product details are required' });
-            }
-
-            const newProduct = await Product.create({
-                shopId, shopName, productImage, productName, description, colors, size, price
-            });
-            console.log(newProduct);
-            res.status(201).json({ message: 'Product added successfully', product: newProduct });
-        } else {
-            res.status(500).json('You are not authorized to add any product')
-        }
-    } catch (error) {
-        console.error('Failed to add product:', error);
-        res.status(500).json({ error: error.message });
-    }
-};
-
-const getProductsByShopId = async (req, res) => {
-    try {
-        const shopId = req.Id;
-        const products = await Product.find({ shopId });
-        console.log(products)
-        res.status(200).json(products);
-    } catch (error) {
-        console.error('Failed to get products:', error);
-        res.status(500).json({ error: error.message });
-    }
-};
-
-const getProductByShopName = async (req, res) => {
-    try {
-        const { shopName } = req.query; //shopName from query parameters
-
-        if (!shopName) {
-            return res.status(400).json({ error: 'shopName is required' });
-        }
-
-        //products based on shopName
-        const products = await Product.find({ shopName });
-
-        if (products.length === 0) {
-            return res.status(404).json({ error: 'No products found for this shop' });
-        }
-
-        console.log(products);
-        res.status(200).json(products);
-    } catch (error) {
-        console.error('Failed to get products:', error);
-        res.status(500).json({ error: error.message });
-    }
-};
-
-
-const deleteProductByObjectId = async (req, res) => {
-    try {
-        const { productId } = req.body;
-        const shopId = req.Id;
-
-        const product = await Product.findById(productId);
-
-        if (!product) {
-            return res.status(404).json({ error: 'Product not found' });
-        }
-
-        if (product.shopId !== shopId) {
-            return res.status(403).json({ error: 'You do not have permission to delete this product' });
-        }
-
-        await Product.findByIdAndDelete(productId);
-        res.status(200).json({ message: 'Product deleted successfully' });
-    } catch (error) {
-        console.error('Failed to delete product:', error);
-        res.status(500).json({ error: error.message });
-    }
-};
-
-const updateProductByObjectId = async (req, res) => {
-    try {
-        const { productId, productImage, productName, description, colors, size, price } = req.body;
-        const shopId = req.Id;
-        const product = await Product.findById(productId);
-
-        if (!product) {
-            return res.status(404).json({ error: 'Product not found' });
-        }
-
-        if (product.shopId !== shopId) {
-            return res.status(403).json({ error: 'You do not have permission to update this product' });
-        }
-
-        const updatedProduct = await Product.findByIdAndUpdate(
-            productId,
-            { productImage, productName, description, colors, size, price },
-            { new: true } // Return the updated document
-        );
-
-        res.status(200).json({ message: 'Product updated successfully', product: updatedProduct });
-    } catch (error) {
-        console.error('Failed to update product:', error);
-        res.status(500).json({ error: error.message });
-    }
-};
-
-module.exports = { addUser, loginUser, getShops, verifyToken, addProduct, getProductsByShopId, getProductByShopName, deleteProductByObjectId, updateProductByObjectId };
+module.exports = { addUser, loginUser, getShops, verifyToken };

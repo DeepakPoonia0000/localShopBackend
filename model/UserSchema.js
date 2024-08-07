@@ -8,7 +8,7 @@ const addUser = new mongoose.Schema({
     shopName: String,
     password: String,
     role:String,
-    pincode: String,
+    pincode: Number,
     address: String,
     location: String,
     token: String,

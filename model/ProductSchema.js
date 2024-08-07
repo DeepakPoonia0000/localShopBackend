@@ -1,9 +1,10 @@
 // productSchema.js
 
-const mongoose = require('mongoose')
+
+const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema({
-    shopId:String,
+    shopId: String,
     shopName: String,
     productImage: [String],
     productName: String,
@@ -12,9 +13,17 @@ const productSchema = new mongoose.Schema({
     size: [Number],
     price: Number,
     stock: Number,
-    timeOfAdding: String
-})
-
+    timeOfAdding: {
+        type: Date,
+        default: Date.now,
+    },
+    expireAt: {
+        type: Date,
+        // default: () => Date.now() + 20 * 1000, // 20 seconds from now
+        default: () => Date.now() + 10 * 24 * 60 * 60 * 1000, // 10 days from now
+        index: { expireAfterSeconds: 0 },
+    },
+});
 
 const Product = mongoose.model('Product', productSchema);
 

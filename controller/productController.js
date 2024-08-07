@@ -8,22 +8,25 @@ const addProduct = async (req, res) => {
         const { productImage, productName, description, colors, size, price } = req.body;
         const shopId = req.Id;
         const shopName = req.shopName;
-        const user = User.findOne(shopName)
+        const user = await User.findById(shopId)
         const role = user.role;
+        console.log("user details in add product are\n", "userID", shopId, "\n User ShopName", shopName, "\n ROle", role);
 
-        if(role ==='R@7yU5vK*9#L^eP&1!sF8$2B0oQmWzD4xJ%pC3gN#6T$Y'){
-        if (!productImage || !productName || !description || !colors || !size || !price) {
-            return res.status(400).json({ error: 'All product details are required' });
+
+        if (role === 'R@7yU5vK*9#L^eP&1!sF8$2B0oQmWzD4xJ%pC3gN#6T$Y') {  
+            if (!productImage || !productName || !description || !colors || !size || !price) {
+                return res.status(400).json({ error: 'All product details are required' });
+            }
+        
+
+            const newProduct = await Product.create({
+                shopId, shopName, productImage, productName, description, colors, size, price
+            });
+            console.log(newProduct);
+            res.status(201).json({ message: 'Product added successfully', product: newProduct });
+        } else {
+            res.status(500).json('You are not authorized to add any product')
         }
-
-        const newProduct = await Product.create({
-            shopId, shopName, productImage, productName, description, colors, size, price
-        });
-        console.log(newProduct);
-        res.status(201).json({ message: 'Product added successfully', product: newProduct });
-    }else {
-        res.status(500).json('You are not authorized to add any product')
-    }
     } catch (error) {
         console.error('Failed to add product:', error);
         res.status(500).json({ error: error.message });
@@ -44,7 +47,7 @@ const getProductsByShopId = async (req, res) => {
 
 const getProductByShopName = async (req, res) => {
     try {
-        const { shopName } = req.query; //shopName from query parameters
+        const { shopName } = req.query;
 
         if (!shopName) {
             return res.status(400).json({ error: 'shopName is required' });
@@ -68,7 +71,7 @@ const getProductByShopName = async (req, res) => {
 
 const deleteProductByObjectId = async (req, res) => {
     try {
-        const { productId } = req.body; 
+        const { productId } = req.body;
         const shopId = req.Id;
 
         const product = await Product.findById(productId);
@@ -92,7 +95,7 @@ const deleteProductByObjectId = async (req, res) => {
 const updateProductByObjectId = async (req, res) => {
     try {
         const { productId, productImage, productName, description, colors, size, price } = req.body;
-        const shopId = req.Id; 
+        const shopId = req.Id;
         const product = await Product.findById(productId);
 
         if (!product) {
