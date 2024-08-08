@@ -10,7 +10,10 @@ const addUser = new mongoose.Schema({
     role: String,
     pincode: Number,
     address: String,
-    location: String,
+    location:{
+        longitude:String,
+        latitude:String
+    },
     token: String,
     dateOfRegister: {
         type: Date,
