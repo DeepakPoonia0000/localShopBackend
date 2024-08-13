@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { addUser, loginUser, getShops, verifyToken } = require('./controller/UserController')
-const { addProduct, updateProductByObjectId, deleteProductByObjectId, getProductsByShopId, getProductByShopName } = require('./controller/productController');
+const { addProduct, updateProductByObjectId, deleteProductByObjectId, getProductsByShopId, getProductByShopName, getProductsByProductId } = require('./controller/productController');
 const dbConnection = require('./dbConnection');
 const { verify } = require('jsonwebtoken');
 
@@ -23,7 +23,7 @@ app.delete('/delete', verifyToken, deleteProductByObjectId);
 app.put('/update', verifyToken, updateProductByObjectId);
 
 app.get('/details', getProductByShopName);
-// app.get('/details', verifyToken, getProductByShopName);
+app.get('/productDetails', getProductsByProductId);
 app.get('/shops', verifyToken, getShops);
 
 app.listen(PORT, (error) => {

@@ -146,15 +146,15 @@ const getShops = async (req, res) => {
         let shops;
 
         const pincodeInt = parseInt(pincode, 10);
-        const minPincode = pincodeInt - 10;
-        const maxPincode = pincodeInt + 10;
+        const minPincode = pincodeInt - 6;
+        const maxPincode = pincodeInt + 6;
         if (pincode) {
             shops = await User.find(
                 {
                     role: "R@7yU5vK*9#L^eP&1!sF8$2B0oQmWzD4xJ%pC3gN#6T$Y",
                     pincode: { $gte: minPincode, $lte: maxPincode }
                 },
-                'shopName address pincode'
+                'shopName address pincode location'
             )
                 .skip((page - 1) * limit)
                 .limit(limit);
@@ -178,7 +178,7 @@ const getShops = async (req, res) => {
             return res.status(404).json({ error: 'No shops found' });
         }
 
-        console.log('Shops found:', shops);
+        console.log('Shops found by pincode :', shops);
         res.status(200).json({ shops, role, total: totalShops });
     } catch (error) {
         console.error('Failed to get shops:', error);

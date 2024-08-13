@@ -68,6 +68,23 @@ const getProductByShopName = async (req, res) => {
     }
 };
 
+const getProductsByProductId = async(req,res) =>{
+    try {
+        const {productId} = req.query;
+
+        const product =await Product.findById(productId)
+
+        if(!product){
+            return res.status(404).json({ error: 'This product is not available anymore.' });
+        }
+        console.log(product)
+        res.status(200).json(product);
+
+    } catch (error) {
+        res.status(500).json(error)
+    }
+}
+
 
 const deleteProductByObjectId = async (req, res) => {
     try {
@@ -119,4 +136,4 @@ const updateProductByObjectId = async (req, res) => {
     }
 };
 
-module.exports = { addProduct, getProductsByShopId, getProductByShopName, deleteProductByObjectId, updateProductByObjectId };
+module.exports = { addProduct, getProductsByShopId, getProductByShopName, getProductsByProductId, deleteProductByObjectId, updateProductByObjectId };
